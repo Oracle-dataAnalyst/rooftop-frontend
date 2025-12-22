@@ -25,6 +25,11 @@ st.write(estimate.note or "")
 
 st.subheader("확정 면적 입력")
 default_area = float(estimate.roof_area_m2_suggested or 0.0)
+if default_area > 0 and not state.get("roof_area_m2_confirmed"):
+    svc.confirm_area(default_area)
+    set_state("roof_area_m2_confirmed", default_area)
+    st.info("추정 면적을 자동 입력했습니다. 필요 시 값을 수정한 뒤 다시 확정하세요.")
+
 confirmed = st.number_input("옥상 면적(㎡)", min_value=0.0, value=default_area, step=10.0)
 
 if st.button("면적 확정", type="primary"):

@@ -35,7 +35,7 @@ class AnalyzeService:
         lat = float(loc_dict["point"]["lat"])
         lon = float(loc_dict["point"]["lon"])
         candidates = self.buildings.find_candidates(lat, lon)
-        est = self.rooftop.estimate_area(candidates)
+        est = self.rooftop.estimate_area(candidates, lat=lat, lon=lon)
         return est
 
     def confirm_area(self, roof_area_m2: float) -> None:
