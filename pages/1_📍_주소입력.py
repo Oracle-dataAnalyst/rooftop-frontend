@@ -7,7 +7,7 @@ from core.state import get_state, set_state
 
 st.set_page_config(page_title="주소입력 | 옥상이몽", page_icon="📍", layout="wide")
 
-render_header(active="simulate")
+render_header("simulate")
 
 st.header("📍 주소 입력")
 st.write("주소를 입력하면 좌표/정규화 주소를 조회합니다. (외부 API가 없으면 더미 동작)")
