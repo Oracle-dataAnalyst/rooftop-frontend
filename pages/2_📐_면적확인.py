@@ -1,14 +1,14 @@
 import streamlit as st
 
-from core.services.analyze_service import AnalyzeService
+from components.common.footer import render_footer
 from components.common.header import render_header
+from core.services.analyze_service import AnalyzeService
 from core.state import get_state, set_state
+from ui.area_confirm_ui import render_area_confirm_ui
 
 st.set_page_config(page_title="면적확인 | 옥상이몽", page_icon="📐", layout="wide")
-render_header(active="simulate")
 
-st.header("📐 면적 확인")
-st.write("좌표/건물 후보를 기반으로 옥상(또는 대상) 면적을 추정하고, 사용자가 확정합니다.")
+render_header("simulate")
 
 state = get_state()
 loc = state.get("location")
@@ -19,19 +19,54 @@ if not loc:
 svc = AnalyzeService()
 estimate = svc.estimate_rooftop_area(loc)
 
-st.subheader("추천(추정) 면적")
-st.metric("추정 옥상면적(㎡)", value=estimate.roof_area_m2_suggested or "N/A")
-st.write(estimate.note or "")
+suggested_area = estimate.roof_area_m2_suggested
 
-st.subheader("확정 면적 입력")
-default_area = float(estimate.roof_area_m2_suggested or 0.0)
-confirmed = st.number_input("옥상 면적(㎡)", min_value=0.0, value=default_area, step=10.0)
+confirmed_area = state.get("roof_area_m2_confirmed")
+default_area = confirmed_area if confirmed_area is not None else (suggested_area or 0.0)
 
-if st.button("면적 확정", type="primary"):
-    svc.confirm_area(confirmed)
-    set_state("roof_area_m2_confirmed", confirmed)
-    st.success("면적을 확정했습니다.")
+address_title = loc.get("input_address") or "선택한 주소"
+address_caption = loc.get("normalized_address") or address_title
 
-st.divider()
-st.subheader("현재 세션 상태")
-st.json(get_state(), expanded=False)
+floor_area = None
+availability_ratio = None
+
+if floor_area and suggested_area:
+    availability_ratio = (suggested_area / floor_area) * 100
+
+ui_state = render_area_confirm_ui(
+    address_title=address_title,
+    address_caption=address_caption,
+    floor_area=floor_area,
+    suggested_area=suggested_area,
+    availability_ratio=availability_ratio,
+    default_area=default_area,
+)
+
+if ui_state["apply_clicked"]:
+    try:
+        parsed_area = float(ui_state["roof_area_value"].replace(",", "")) if ui_state["roof_area_value"] else 0.0
+    except ValueError:
+        parsed_area = -1
+        
+    if parsed_area <= 0:
+        st.error("유효한 면적 값을 입력해주세요.")
+    else:
+        svc.confirm_area(parsed_area)
+        set_state("roof_area_m2_confirmed", parsed_area)
+        st.success("면적 값을 적용했습니다.")
+        
+        
+if ui_state["prev_clicked"]:
+    st.switch_page("pages/1_📍_주소입력.py")
+
+if ui_state["next_clicked"]:
+    if not get_state().get("roof_area_m2_confirmed") and suggested_area:
+        svc.confirm_area(float(suggested_area))
+        set_state("roof_area_m2_confirmed", float(suggested_area))
+    if not get_state().get("roof_area_m2_confirmed"):
+        st.error("다음 단계로 이동하려면 면적을 입력해주세요.")
+    else:
+        st.switch_page("pages/3_🌿_녹화계획.py")
+
+
+render_footer()

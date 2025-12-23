@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from core.models import RooftopAreaEstimate
 from core.data_access.repositories import get_roof_area_from_candidate
+from core.config import settings
+from core.utils.geometry import polygon_area_m2
+from api.vworld_wfs import get_building_polygon
 
 class RooftopService:
-    def estimate_area(self, candidates) -> RooftopAreaEstimate:
+    def estimate_area(self, candidates, lat: float | None = None, lon: float | None = None) -> RooftopAreaEstimate:
         """Estimate rooftop area from candidates or fallback to None."""
         suggested = None
         confidence = "low"
@@ -17,6 +20,19 @@ class RooftopService:
                 confidence = "medium"
                 note = "데이터 테이블의 roof_area_m2 값을 기반으로 추정했습니다. 정확도를 위해 확인이 필요합니다."
                 break
+            
+            
+        if suggested is None and lat is not None and lon is not None and settings.vworld_api_key:
+            try:
+                polygon = get_building_polygon((lat, lon), api_key=settings.vworld_api_key)
+            except Exception:
+                polygon = None
+            if polygon:
+                area = polygon_area_m2(polygon)
+                if area > 0:
+                    suggested = float(area)
+                    confidence = "low"
+                    note = "VWorld 건물 폴리곤(WFS)으로 면적을 추정했습니다. 참고용으로 확인이 필요합니다."
 
         return RooftopAreaEstimate(
             roof_area_m2_suggested=suggested,

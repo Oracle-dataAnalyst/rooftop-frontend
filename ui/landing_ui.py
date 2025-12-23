@@ -4,6 +4,8 @@ import os
 
 # 공통 헤더 컴포넌트 import
 from components.common.header import render_header
+from core.services.analyze_service import AnalyzeService
+from core.state import set_state
 
 def load_css_content(file_name):
     """CSS 파일 내용을 문자열로 반환합니다."""
@@ -67,9 +69,16 @@ def render_landing_page():
             )
         with c2:
             if st.button("시뮬레이션 시작", type="primary", use_container_width=True):
-                if address:
-                    st.session_state["address"] = address
-                st.switch_page("pages/1_📍_주소입력.py")
+              if not address:
+                    st.error("주소를 입력해주세요.")
+              else:
+                    svc = AnalyzeService()
+                    try:
+                        loc = svc.set_address(address)
+                        set_state("location", loc.model_dump())
+                        st.switch_page("pages/2_📐_면적확인.py")
+                    except Exception as exc:
+                        st.error(f"주소 처리 실패: {exc}")
         
         st.markdown(
             "<p style='text-align:center; font-size:12px; color:#718096; margin-top:8px;'>"

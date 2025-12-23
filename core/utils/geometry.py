@@ -18,19 +18,27 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return R * c
 
 def polygon_area_m2(coords_lonlat: Iterable[Tuple[float, float]]) -> float:
-    """Very rough planar area placeholder.
+    """Approximate polygon area in square meters from lon/lat coordinates.
 
     coords_lonlat: [(lon, lat), ...] closed or open polygon.
-    WARNING: Not accurate for real geographic coordinates.
-    Replace with shapely + projected CRS in production.
+    NOTE: This uses a simple local projection; replace with shapely/pyproj for accuracy.
     """
     pts = list(coords_lonlat)
     if len(pts) < 3:
         return 0.0
-    # naive shoelace on degrees (placeholder)
+    
+    lat0 = sum(lat for _, lat in pts) / len(pts)
+    meters_per_deg_lat = (
+        111132.92 - 559.82 * math.cos(2 * math.radians(lat0)) + 1.175 * math.cos(4 * math.radians(lat0))
+    )
+    meters_per_deg_lon = 111412.84 * math.cos(math.radians(lat0)) - 93.5 * math.cos(3 * math.radians(lat0))
+
+    projected = [(lon * meters_per_deg_lon, lat * meters_per_deg_lat) for lon, lat in pts]
+    
     area = 0.0
-    for i in range(len(pts)):
-        x1, y1 = pts[i]
-        x2, y2 = pts[(i + 1) % len(pts)]
+    for i in range(len(projected)):
+        x1, y1 = projected[i]
+        x2, y2 = projected[(i + 1) % len(projected)]
         area += x1 * y2 - x2 * y1
+        
     return abs(area) / 2.0
