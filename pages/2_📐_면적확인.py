@@ -2,64 +2,68 @@ import streamlit as st
 
 from components.common.footer import render_footer
 from components.common.header import render_header
-from core.models import ScenarioInput
 from core.services.analyze_service import AnalyzeService
-from core.services.scenario_service import ScenarioService
 from core.state import get_state, set_state
-from ui.planning_ui import render_planning_ui
+from ui.area_confirm_ui import render_area_confirm_ui
 
-st.set_page_config(page_title="녹화계획 | 옥상이몽", page_icon="🌿", layout="wide")
+st.set_page_config(page_title="면적확인 | 옥상이몽", page_icon="📐", layout="wide")
+
 render_header("simulate")
 
 state = get_state()
-if not state.get("roof_area_m2_confirmed"):
-    st.warning("먼저 '면적확인' 페이지에서 면적을 확정하세요.")
+loc = state.get("location")
+if not loc:
+    st.warning("먼저 '주소입력' 페이지에서 주소를 입력하세요.")
     st.stop()
 
-roof_area = float(state["roof_area_m2_confirmed"])
-existing_scenario = state.get("scenario") or {}
-default_type = existing_scenario.get("greening_type", "sedum")
-default_ratio = float(existing_scenario.get("coverage_ratio", 0.65))
+svc = AnalyzeService()
+estimate = svc.estimate_rooftop_area(loc)
 
-if "planning_selected_type" not in st.session_state:
-    st.session_state["planning_selected_type"] = default_type
+suggested_area = estimate.roof_area_m2_suggested
 
-active_type = st.session_state.get("planning_selected_type", default_type)
-slider_default = int(round(default_ratio * 100))
-active_ratio = (st.session_state.get("planning_slider", slider_default) or 0) / 100
+floor_area = estimate.floor_area_m2
+availability_ratio = estimate.availability_ratio
 
-scenario_service = ScenarioService()
-preview_scenario = ScenarioInput(greening_type=active_type, coverage_ratio=active_ratio)
-preview_result = scenario_service.compute(roof_area_m2=roof_area, scenario=preview_scenario)
+confirmed_area = state.get("roof_area_m2_confirmed")
+default_area = confirmed_area if confirmed_area is not None else 0.0
 
-ui_state = render_planning_ui(
-    roof_area=roof_area,
-    selected_type=active_type,
-    coverage_ratio=active_ratio,
-    green_area_m2=preview_result.green_area_m2,
-    co2_absorption_kg=preview_result.co2_absorption_kg_per_year,
-    temp_reduction_c=preview_result.temp_reduction_c,
+address_title = loc.get("input_address") or "선택한 주소"
+address_caption = loc.get("normalized_address") or address_title
+
+
+ui_state = render_area_confirm_ui(
+    address_title=address_title,
+    address_caption=address_caption,
+    floor_area=floor_area,
+    suggested_area=suggested_area,
+    availability_ratio=availability_ratio,
+    default_area=default_area,
 )
 
-selected_type = ui_state["selected_type"]
-coverage_ratio = ui_state["coverage_ratio"]
-
-scenario = ScenarioInput(greening_type=selected_type, coverage_ratio=coverage_ratio)
-
-svc = AnalyzeService()
-
-if ui_state["save_clicked"]:
-    svc.set_scenario(scenario)
-    set_state("scenario", scenario.model_dump())
-    st.success("녹화 계획을 저장했습니다.")
-
-
+if ui_state["apply_clicked"]:
+    try:
+        parsed_area = float(ui_state["roof_area_value"].replace(",", "")) if ui_state["roof_area_value"] else 0.0
+    except ValueError:
+        parsed_area = -1
+        
+    if parsed_area <= 0:
+        st.error("유효한 면적 값을 입력해주세요.")
+    else:
+        svc.confirm_area(parsed_area)
+        set_state("roof_area_m2_confirmed", parsed_area)
+        st.success("면적 값을 적용했습니다.")
+        
+        
 if ui_state["prev_clicked"]:
-    st.switch_page("pages/2_📐_면적확인.py")
+    st.switch_page("pages/1_📍_주소입력.py")
 
 if ui_state["next_clicked"]:
-    svc.set_scenario(scenario)
-    set_state("scenario", scenario.model_dump())
-    st.switch_page("pages/4_📊_결과확인.py")
+    if not get_state().get("roof_area_m2_confirmed") and suggested_area:
+         st.info("추천 면적을 적용하려면 '값 적용'을 눌러주세요.")
+    if not get_state().get("roof_area_m2_confirmed"):
+        st.error("다음 단계로 이동하려면 면적을 입력해주세요.")
+    else:
+        st.switch_page("pages/3_🌿_녹화계획.py")
+
 
 render_footer()
