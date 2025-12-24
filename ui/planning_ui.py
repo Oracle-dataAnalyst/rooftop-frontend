@@ -200,9 +200,11 @@ def render_planning_ui(
         .slider-holder .stSlider { width: 100%; }
         .slider-holder [data-baseweb="slider"] { width: 100%; }
         .slider-holder .stSlider > div { padding: 6px 0; }
-        .slider-holder .stSlider [role="slider"] { background: #2f855a; box-shadow: 0 6px 18px rgba(15,23,42,.18); width: 16px; height: 16px; }
+         .slider-holder [data-baseweb="slider"] > div > div { background: #c6f6d5; }
+        .slider-holder [data-baseweb="slider"] > div > div > div { background: #2f855a; }
+        .slider-holder .stSlider [role="slider"] { background: #2f855a !important; box-shadow: 0 6px 18px rgba(15,23,42,.18); width: 16px; height: 16px; }
         .slider-holder .stSlider [role="slider"]::before { display: none; }
-        .slider-holder .stSlider [data-testid="stThumbValue"] { display: none; }
+        .slider-holder .stSlider [data-testid=\"stThumbValue\"], .slider-holder [data-baseweb=\"slider\"] [data-baseweb=\"slider-value\"] { color: #2f855a !important; }
         
         
 

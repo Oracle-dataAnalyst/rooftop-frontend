@@ -23,11 +23,10 @@ default_ratio = float(existing_scenario.get("coverage_ratio", 0.65))
 
 if "planning_selected_type" not in st.session_state:
     st.session_state["planning_selected_type"] = default_type
-if "planning_slider" not in st.session_state:
-    st.session_state["planning_slider"] = int(round(default_ratio * 100))
 
 active_type = st.session_state.get("planning_selected_type", default_type)
-active_ratio = (st.session_state.get("planning_slider", int(default_ratio * 100)) or 0) / 100
+slider_default = int(round(default_ratio * 100))
+active_ratio = (st.session_state.get("planning_slider", slider_default) or 0) / 100
 
 scenario_service = ScenarioService()
 preview_scenario = ScenarioInput(greening_type=active_type, coverage_ratio=active_ratio)
