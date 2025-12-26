@@ -6,8 +6,25 @@ from datetime import datetime
 import pandas as pd
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
 from core.models import SimulationResult
+
+KOREAN_FONT = "HYGoThic-Medium"
+
+
+def _ensure_korean_font() -> str:
+    """Register and return a Unicode-capable Korean font for ReportLab."""
+    if KOREAN_FONT not in pdfmetrics.getRegisteredFontNames():
+        try:
+            pdfmetrics.registerFont(UnicodeCIDFont(KOREAN_FONT))
+        except Exception:
+
+            return "Helvetica"
+    return KOREAN_FONT
+
+
 
 class ReportService:
     """Create PDF/Excel artifacts from SimulationResult.
@@ -20,21 +37,22 @@ class ReportService:
         buf = io.BytesIO()
         c = canvas.Canvas(buf, pagesize=A4)
         w, h = A4
+        font_name = _ensure_korean_font()
 
         y = h - 60
-        c.setFont("Helvetica-Bold", 16)
+        c.setFont(font_name, 16)
         c.drawString(60, y, "옥상이몽 시뮬레이션 리포트 (MVP)")
         y -= 24
-        c.setFont("Helvetica", 10)
+        c.setFont(font_name, 10)
         c.drawString(60, y, f"Generated: {datetime.utcnow().isoformat()}Z")
         y -= 18
         c.drawString(60, y, f"Engine: {result.engine_version} | Coeff set: {result.coefficient_set_version}")
         y -= 30
 
-        c.setFont("Helvetica-Bold", 12)
+        c.setFont(font_name, 12)
         c.drawString(60, y, "입력값")
         y -= 18
-        c.setFont("Helvetica", 11)
+        c.setFont(font_name, 11)
         c.drawString(60, y, f"- 옥상 면적(㎡): {result.roof_area_m2:,.2f}")
         y -= 16
         c.drawString(60, y, f"- 녹화 유형: {result.greening_type}")
@@ -42,10 +60,10 @@ class ReportService:
         c.drawString(60, y, f"- 녹화 비율: {result.coverage_ratio:.2%}")
         y -= 26
 
-        c.setFont("Helvetica-Bold", 12)
+        c.setFont(font_name, 12)
         c.drawString(60, y, "결과")
         y -= 18
-        c.setFont("Helvetica", 11)
+        c.setFont(font_name, 11)
         c.drawString(60, y, f"- 녹화 면적(㎡): {result.green_area_m2:,.2f}")
         y -= 16
         c.drawString(60, y, f"- CO₂ 흡수(kg/년): {result.co2_absorption_kg_per_year:,.2f}")
@@ -57,7 +75,7 @@ class ReportService:
         c.drawString(60, y, f"- 소나무 환산(그루): {result.tree_equivalent_count}")
         y -= 30
 
-        c.setFont("Helvetica", 9)
+        c.setFont(font_name, 9)
         c.drawString(60, y, "※ 본 리포트는 MVP 산출물이며, 실제 정책/심사 제출 전 계수·근거 검증이 필요합니다.")
         c.showPage()
         c.save()
