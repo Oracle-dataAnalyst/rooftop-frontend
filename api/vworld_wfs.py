@@ -103,6 +103,9 @@ def get_building_polygon(
         resp.raise_for_status()
 
     if "json" not in ctype.lower():
+        # 인증키 오류(응답이 XML) 등은 조용히 무시하고 폴리곤 없이 진행
+        if "<ServiceException" in resp.text:
+            return None
         print("[VWORLD WFS] Non-JSON response")
         print("[VWORLD WFS] URL:", resp.url)
         print("[VWORLD WFS] CT:", ctype)
