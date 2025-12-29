@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import requests
 from core.models import LocationResult
 
@@ -12,9 +14,12 @@ class VWorldGeocodingProvider:
 
     BASE_URL = "https://api.vworld.kr/req/address"
 
-    def __init__(self, api_key: str, timeout_s: float = 5.0):
+
+    def __init__(self, api_key: str, timeout_s: float = 5.0, domain: str | None = None):
         self.api_key = api_key
         self.timeout_s = timeout_s
+        # VWorld는 발급키에 허용 도메인이 묶여 있을 수 있으므로 domain을 함께 전송한다.
+        self.domain = domain or os.getenv("VWORLD_DOMAIN")
 
     def geocode(self, address: str) -> LocationResult | None:
         address = (address or "").strip()
@@ -30,6 +35,9 @@ class VWorldGeocodingProvider:
             "address": address,
             "key": self.api_key,
         }
+        if self.domain:
+            params["domain"] = self.domain
+
         resp = requests.get(self.BASE_URL, params=params, timeout=self.timeout_s)
         resp.raise_for_status()
         data = resp.json()
