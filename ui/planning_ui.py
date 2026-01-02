@@ -5,68 +5,8 @@ from dataclasses import dataclass
 
 import streamlit as st
 
-
-@dataclass(frozen=True)
-class GreeningTypeInfo:
-    code: str
-    label: str
-    icon: str
-    co2_text: str
-    subtext: str
-    detail_recommendation: str
-    detail_co2: str
-    detail_temp: str
-    detail_feature: str
-    badge: str | None = None
-
-
-TYPE_INFOS: dict[str, GreeningTypeInfo] = {
-    "grass": GreeningTypeInfo(
-        code="grass",
-        label="잔디",
-        icon="🌱",
-        co2_text="0.4 kg/㎡/년",
-        subtext="관리 용이 · 기본형",
-        detail_recommendation="잔디 또는 잔디 혼합",
-        detail_co2="0.4 kg/㎡/년 (임시값)",
-        detail_temp="약 6~10℃ (임시값)",
-        detail_feature="관리 용이 · 기본형",
-    ),
-    "sedum": GreeningTypeInfo(
-        code="sedum",
-        label="세덤",
-        icon="🍃",
-        co2_text="0.7 kg/㎡/년",
-        subtext="저관리 · 옥상 적합",
-        detail_recommendation="Sedum spp. (예: 돌나물류)",
-        detail_co2="0.7 kg/㎡/년 (임시값)",
-        detail_temp="약 10~15℃ (임시값)",
-        detail_feature="저관리 · 경량 · 옥상 적합",
-        badge="추천",
-    ),
-    "shrub": GreeningTypeInfo(
-        code="shrub",
-        label="관목",
-        icon="🌿",
-        co2_text="4.0 kg/㎡/년",
-        subtext="집약형 · 고효율",
-        detail_recommendation="관목류 · 교목 혼합",
-        detail_co2="4.0 kg/㎡/년 (임시값)",
-        detail_temp="약 12~18℃ (임시값)",
-        detail_feature="집약형 · 고효율",
-    ),
-    "tree": GreeningTypeInfo(
-        code="tree",
-        label="나무",
-        icon="🌳",
-        co2_text="확정 예정",
-        subtext="하중·구조 검토 필요",
-        detail_recommendation="수종·하중·구조 검토 필요",
-        detail_co2="추후 확정 예정",
-        detail_temp="추후 확정 예정",
-        detail_feature="구조 검토 필요",
-    ),
-}
+from core.constants import GREEN_TYPE_INFO, SPECIES_INFO
+# Force reload
 
 
 def _format_number(value: float) -> str:
@@ -89,11 +29,15 @@ def render_planning_ui(
     green_area_m2: float,
     co2_absorption_kg: float,
     temp_reduction_c: float,
+    species: str | None = None,
+    tree_count: int = 0,
 ) -> dict:
     st.markdown(
         """
         <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Scoped reset for our custom components only */
+        .page * { box-sizing: border-box; }
+        .page { margin: 0; padding: 0; }
         body {
           font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", system-ui, sans-serif;
           background: #f4f6f9;
@@ -130,20 +74,9 @@ def render_planning_ui(
         .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
         .pill { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; background: #edf2f7; color: #1a202c; border-radius: 999px; padding: 6px 10px; font-weight: 800; }
 
-        .block { margin-top: 18px; }
-        .block-title { font-size: 12px; font-weight: 900; color: #1a202c; margin-bottom: 10px; }
 
-        /* 타입 카드 */
-        .type-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .type-card { position: relative; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; padding: 14px 12px; text-align: left; transition: all .08s ease; min-height: 138px; }
-        .type-card:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(15,23,42,.10); }
-        .type-card.selected { border-color: rgba(72,187,120,.65); box-shadow: 0 14px 36px rgba(72,187,120,.14); }
-        .type-badge { position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 900; background: #48bb78; color: #fff; border-radius: 999px; padding: 3px 8px; }
-        .type-icon { width: 36px; height: 36px; border-radius: 999px; background: #f0fff4; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
-        .type-name { font-size: 14px; font-weight: 900; margin-bottom: 6px; }
-        .type-meta { display: flex; gap: 6px; align-items: baseline; font-size: 11px; color: #4a5568; }
-        .type-meta strong { font-size: 12px; color: #1a202c; }
-        .type-sub { font-size: 11px; color: #a0aec0; margin-top: 8px; font-weight: 800; }
+
+
 
         /* 디테일 */
         .detail-panel { border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 14px; background: #fff; }
@@ -187,15 +120,31 @@ def render_planning_ui(
         .mini-v { font-size: 13px; color: #1a202c; font-weight: 900; margin-top: 4px; }
 
         /* Streamlit 위젯 커스터마이즈 */
+        /* 타입 버튼 오버레이 스타일 */
         .type-buttons .stButton > button {
           width: 100%;
-          height: 100%;
+          height: 140px !important;
           text-align: left;
           padding: 0;
           background: transparent;
           border: none;
+          color: transparent !important;
+          position: relative;
+          z-index: 10;
         }
         .type-buttons .stButton > button:focus { outline: none; box-shadow: none; }
+        
+        /* 종 버튼 오버레이 스타일 */
+        .species-buttons .stButton > button {
+           width: 100%;
+           height: 100px !important;
+           background: transparent;
+           border: none;
+           color: transparent !important;
+           position: relative;
+           z-index: 10;
+        }
+        .species-buttons .stButton > button:focus { outline: none; box-shadow: none; }
 
         .slider-holder .stSlider { width: 100%; }
         .slider-holder [data-baseweb="slider"] { width: 100%; }
@@ -206,8 +155,6 @@ def render_planning_ui(
         .slider-holder .stSlider [role="slider"]::before { display: none; }
         .slider-holder .stSlider [data-testid=\"stThumbValue\"], .slider-holder [data-baseweb=\"slider\"] [data-baseweb=\"slider-value\"] { color: #2f855a !important; }
         
-        
-
         .cta-row .stButton > button {
           border-radius: 999px;
           padding: 10px 18px;
@@ -223,17 +170,16 @@ def render_planning_ui(
           border-color: transparent;
         }
         .cta-row .stButton.primary > button:hover { background: #2f855a; }
-
-        @media (max-width: 1100px) {
-          .grid { grid-template-columns: 1fr; }
-          .type-container { grid-template-columns: repeat(2, 1fr); }
+        .cta-row .stButton.primary > button:hover { background: #2f855a; }
+        
+        /* 선택된 버튼 초록색으로 */
+        [data-testid="stButton"] button[kind="primary"] {
+            background-color: #48bb78 !important;
+            border-color: #48bb78 !important;
         }
-        @media (max-width: 640px) {
-          .type-container { grid-template-columns: 1fr; }
-          .detail-grid { grid-template-columns: 1fr; }
-          .preview { grid-template-columns: 1fr; }
-          .cta-row { flex-direction: column; }
-          .cta-row .stButton > button { width: 100%; }
+        [data-testid="stButton"] button[kind="primary"]:hover {
+            background-color: #2f855a !important;
+            border-color: #2f855a !important;
         }
         </style>
         """,
@@ -285,108 +231,159 @@ def render_planning_ui(
     left_col, right_col = st.columns([3, 1], gap="large")
 
     with left_col:
-        st.markdown(
-            f"""
-            <section class="card">
-              <div class="card-top">
-                <div class="card-title">분석 대상</div>
-                <div class="pill">가용면적 <strong>{_format_number(roof_area)}㎡</strong></div>
-              </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        with st.container():
+            st.markdown(
+                f"""
+                <section class="card">
+                  <div class="card-top">
+                    <div class="card-title">분석 대상</div>
+                    <div class="pill">가용면적 <strong>{_format_number(roof_area)}㎡</strong></div>
+                  </div>
+                </section>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        st.markdown('<div class="block">', unsafe_allow_html=True)
-        st.markdown('<div class="block-title">녹화 유형 선택</div>', unsafe_allow_html=True)
-        st.markdown('<div class="type-container type-buttons">', unsafe_allow_html=True)
-
-        cols = st.columns(4, gap="small")
-        for idx, (type_code, info) in enumerate(TYPE_INFOS.items()):
-            with cols[idx]:
-                clicked = st.button(
-                    f"{info.icon} {info.label}\nCO₂ {info.co2_text}\n{info.subtext}",
-                    key=f"type_{type_code}",
-                    use_container_width=True,
-                )
-                if clicked:
-                    st.session_state["planning_selected_type"] = type_code
-                is_selected = st.session_state.get("planning_selected_type", selected_type) == type_code
-                badge_html = f'<div class="type-badge">{info.badge}</div>' if info.badge else ""
-                st.markdown(
-                    f"""
-                    <div class="type-card {'selected' if is_selected else ''}">
-                      {badge_html}
-                      <div class="type-icon">{info.icon}</div>
-                      <div class="type-name">{info.label}</div>
-                      <div class="type-meta"><span>CO₂</span><strong>{info.co2_text}</strong></div>
-                      <div class="type-sub">{info.subtext}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container():
+            st.subheader("🌿 녹화 유형 선택")
+        
+            cols = st.columns(4, gap="small")
+            for idx, (type_code, info) in enumerate(GREEN_TYPE_INFO.items()):
+                with cols[idx]:
+                    co2_str = f"{info['co2']} {info['co2_unit']}"
+                    temp_str = f"-{info['temp']}℃"
+                    is_selected = st.session_state.get("planning_selected_type", selected_type) == type_code
+                    
+                    # 버튼에 내용 직접 표시
+                    button_label = f"{info['icon']} {info['name']}\nCO₂: {co2_str}\n온도: {temp_str}"
+                    button_type = "primary" if is_selected else "secondary"
+                    
+                    if st.button(button_label, key=f"type_{type_code}", use_container_width=True, type=button_type):
+                        st.session_state["planning_selected_type"] = type_code
+ 
 
         selected_type_code = st.session_state.get("planning_selected_type", selected_type)
-        selected_info = TYPE_INFOS.get(selected_type_code, TYPE_INFOS["sedum"])
+        
+        # 2nd Stage: Species Selection
+        st.write("") # Spacer
+        
+        type_species_data = SPECIES_INFO.get(selected_type_code)
+        has_detail_selection = (type_species_data and len(type_species_data) > 1)
+        current_species_key = st.session_state.get("planning_species", species)
+        
+        if has_detail_selection and current_species_key and current_species_key not in type_species_data:
+            current_species_key = list(type_species_data.keys())[0]
+            st.session_state["planning_species"] = current_species_key
+            
+        final_tree_count = 0 
+        
+        with st.container():
+            if has_detail_selection:
+                st.subheader("🌱 세부 종류 선택")
+                sp_cols = st.columns(min(len(type_species_data), 6), gap="small")
+                
+                if not current_species_key:
+                    current_species_key = list(type_species_data.keys())[0]
+                    st.session_state["planning_species"] = current_species_key
 
-        st.markdown('<div class="block">', unsafe_allow_html=True)
-        st.markdown('<div class="block-title">선택 유형 상세</div>', unsafe_allow_html=True)
+                idx = 0
+                for sp_key, sp_info in type_species_data.items():
+                    with sp_cols[idx % 6]:
+                        is_sp_selected = (current_species_key == sp_key)
+                        unit_str = "kg/m²" if selected_type_code != "tree" else "kg"
+                        
+                        sp_label = f"{sp_info['icon']} {sp_info['name']}\n{sp_info['co2']} {unit_str}"
+                        sp_type = "primary" if is_sp_selected else "secondary"
+                        
+                        if st.button(sp_label, key=f"species_{selected_type_code}_{sp_key}", use_container_width=True, type=sp_type):
+                            st.session_state["planning_species"] = sp_key
+                            current_species_key = sp_key
+                    idx += 1
+                st.session_state["planning_species"] = current_species_key
+        if selected_type_code == "tree":
+             with st.container():
+                 st.subheader("나무 수량 설정")
+                 default_tree_count = st.session_state.get("planning_tree_count", max(tree_count, 10))
+                 final_tree_count = st.number_input(
+                    "🌲 나무 그루 수",
+                    min_value=1,
+                    max_value=100,
+                    value=default_tree_count,
+                    key="planning_tree_count",
+                    label_visibility="collapsed" 
+                 )
+
+        
+        active_species_info = None
+        if has_detail_selection and current_species_key:
+             active_species_info = type_species_data.get(current_species_key)
+        
+        main_info = GREEN_TYPE_INFO.get(selected_type_code, GREEN_TYPE_INFO['grass'])
+        
+        with st.container():
+            st.subheader("선택 정보")
+            
+            display_name = active_species_info['name'] if active_species_info else main_info['name']
+            display_icon = active_species_info['icon'] if active_species_info else main_info['icon']
+            display_co2 = active_species_info['co2'] if active_species_info else main_info['co2']
+        
+        if selected_type_code == 'tree':
+             cat = active_species_info.get('category', main_info.get('desc',''))
+             unit = "kg/그루/yr"
+        else:
+             cat = main_info.get('desc', '')
+             unit = "kg/㎡/yr"
+             
+        co2_display_val = f"{display_co2} {unit}"
+        
         st.markdown(
             f"""
             <div class="detail-panel">
               <div class="detail-head">
                 <div class="detail-title">
-                  <span class="detail-icon">{selected_info.icon}</span>
-                  <span>{selected_info.label}</span>
+                  <span class="detail-icon">{display_icon}</span>
+                  <span>{display_name}</span>
                 </div>
-                <div class="detail-tag">상세 패널</div>
+                <div class="detail-tag">{cat}</div>
               </div>
               <div class="detail-grid">
-                <div class="detail-item">
-                  <div class="k">추천 식물</div>
-                  <div class="v">{selected_info.detail_recommendation}</div>
+                 <div class="detail-item">
+                  <div class="k">단위 CO₂ 흡수</div>
+                  <div class="v">{co2_display_val}</div>
                 </div>
-                <div class="detail-item">
-                  <div class="k">CO₂ 흡수량</div>
-                  <div class="v">{selected_info.detail_co2}</div>
-                </div>
-                <div class="detail-item">
-                  <div class="k">온도 저감</div>
-                  <div class="v">{selected_info.detail_temp}</div>
-                </div>
-                <div class="detail-item">
-                  <div class="k">특징</div>
-                  <div class="v">{selected_info.detail_feature}</div>
+                 <div class="detail-item">
+                  <div class="k">온도 저감 효과</div>
+                  <div class="v">-{main_info['temp']}℃</div>
                 </div>
               </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown('<div class="block">', unsafe_allow_html=True)
-        st.markdown('<div class="block-title">녹화 비율</div>', unsafe_allow_html=True)
+        
+        with st.container():
+            st.subheader("녹화 비율")
 
-        st.markdown('<div class="slider-row slider-holder">', unsafe_allow_html=True)
-        slider_col, pct_col = st.columns([9, 1], gap="small")
-        with slider_col:
-            slider_value = st.slider(
-                "녹화 비율(%)",
-                min_value=0,
-                max_value=100,
-                step=5,
-                value=int(round(coverage_ratio * 100)),
-                label_visibility="collapsed",
-                key="planning_slider",
-            )
-        with pct_col:
-            st.markdown(
-                f'<div class="slider-pill"><strong>{slider_value}%</strong></div>',
-                unsafe_allow_html=True,
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown('<div class="slider-row slider-holder">', unsafe_allow_html=True)
+            slider_col, pct_col = st.columns([9, 1], gap="small")
+            with slider_col:
+                slider_value = st.slider(
+                    "녹화 비율(%)",
+                    min_value=0,
+                    max_value=100,
+                    step=5,
+                    value=int(round(coverage_ratio * 100)),
+                    label_visibility="collapsed",
+                    key="planning_slider",
+                )
+            with pct_col:
+                st.markdown(
+                    f'<div class="slider-pill"><strong>{slider_value}%</strong></div>',
+                    unsafe_allow_html=True,
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
         st.markdown(
             f"""
@@ -416,7 +413,7 @@ def render_planning_ui(
             save_clicked = st.button("계획 저장", key="planning_save")
         with next_col:
             next_clicked = st.button("결과 확인하기 →", key="planning_next")
-        st.markdown("</div></section>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with right_col:
         st.markdown(
@@ -460,4 +457,6 @@ def render_planning_ui(
         "prev_clicked": prev_clicked,
         "save_clicked": save_clicked,
         "next_clicked": next_clicked,
+        "tree_count": final_tree_count,
+        "species": current_species_key,
     }

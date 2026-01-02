@@ -23,7 +23,7 @@ def _format_number(value: float, *, decimals: int = 0, default: str = "—") -> 
 def _format_percent(ratio: float | None) -> str:
     if ratio is None:
         return "—"
-    return _format_number(ratio * 100, decimals=0) + "%"
+    return _format_number(int(round(ratio * 100)), decimals=0) + "%"
 
 
 def _escape(text: str) -> str:
