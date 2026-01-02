@@ -37,12 +37,16 @@ class RooftopAreaEstimate(BaseModel):
 class ScenarioInput(BaseModel):
     greening_type: Literal["grass", "sedum", "shrub", "tree"]
     coverage_ratio: float = Field(ge=0.0, le=1.0)
+    tree_count: int = 0
+    species: Optional[str] = None
 
 
 class SimulationResult(BaseModel):
     roof_area_m2: float
     greening_type: str
     coverage_ratio: float
+    tree_count: int = 0
+    species: Optional[str] = None
 
     green_area_m2: float
     co2_absorption_kg_per_year: float
