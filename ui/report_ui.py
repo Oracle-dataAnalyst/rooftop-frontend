@@ -45,16 +45,19 @@ def render_report_ui(
     green_area_m2: float,
     co2_absorption_kg: float,
     temp_reduction_c: float,
+    hvac_savings_kwh: float,
     tree_equivalent_count: int,
     pdf_bytes: bytes,
     pdf_filename: str,
     excel_bytes: bytes,
     excel_filename: str,
+    recommended_combination: str | None = None,
 ) -> dict:
     coverage_percent = _format_percent(coverage_ratio)
     green_area_display = _format_number(green_area_m2, decimals=0)
     co2_display = _format_number(co2_absorption_kg, decimals=1)
     temp_display = f"-{_format_number(abs(temp_reduction_c), decimals=1)}"
+    hvac_display = _format_number(hvac_savings_kwh, decimals=1)
     tree_display = _format_number(tree_equivalent_count, decimals=0)
     greening_label = GREENING_LABELS.get(greening_type_code, greening_type_code)
 
@@ -269,6 +272,7 @@ button,input{font:inherit}
     <div class="building-info">
       <div class="building-name">{_escape(address_title)}</div>
       <div class="building-meta">{_escape(address_caption)} · {_escape(greening_label)} · 녹화 {coverage_percent}</div>
+      {f'<div class="building-meta" style="color:#22543d;font-weight:800;">제안 조합: {_escape(recommended_combination)}</div>' if recommended_combination else ''}
     </div>
   </div>
 
@@ -287,6 +291,11 @@ button,input{font:inherit}
       <div class="result-icon">🌡️</div>
       <div class="result-value">{temp_display} <span class="result-unit">℃</span></div>
       <div class="result-label">온도 저감</div>
+    </div>
+    <div class="result-item">
+      <div class="result-icon">❄️</div>
+      <div class="result-value">{hvac_display} <span class="result-unit">kWh/년</span></div>
+      <div class="result-label">냉난방 절감</div>
     </div>
     <div class="result-item">
       <div class="result-icon">🌲</div>

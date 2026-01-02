@@ -51,10 +51,22 @@ class SimulationResult(BaseModel):
     after_surface_temp_c: float
 
     tree_equivalent_count: int
+    hvac_savings_kwh_per_year: float
 
     engine_version: str
     coefficient_set_version: str
     meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class CoverageRecommendation(BaseModel):
+    effect_kind: Literal["co2", "temp"]
+    target_effect: float
+    achieved_effect: float
+    feasible: bool
+    coverage: dict[str, float]
+    total_cost: float
+    total_load: float
+    combination_label: str
 
 
 class ReportArtifact(BaseModel):

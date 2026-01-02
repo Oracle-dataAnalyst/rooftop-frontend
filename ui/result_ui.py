@@ -40,12 +40,15 @@ def render_result_ui(
     green_area_m2: float,
     co2_absorption_kg: float,
     temp_reduction_c: float,
+    hvac_savings_kwh: float,
     baseline_surface_temp_c: float,
     after_surface_temp_c: float,
     tree_equivalent_count: int,
     co2_coefficient: float | None = None,
     temp_coefficient: float | None = None,
     pine_factor_kg_per_year: float | None = None,
+    recommended_combination: str | None = None,
+    recommendation_feasible: bool | None = None,
 ) -> dict:
     coverage_percent = _format_percent(coverage_ratio)
     green_area_display = _format_number(green_area_m2, decimals=0)
@@ -55,6 +58,7 @@ def render_result_ui(
     temp_detail = f"{_format_number(baseline_surface_temp_c, decimals=1)}℃ → {_format_number(after_surface_temp_c, decimals=1)}℃"
     greening_label = GREENING_LABELS.get(greening_type_code, greening_type_code)
     tree_icons = "🌲" * min(tree_equivalent_count, 5)
+    hvac_savings_display = _format_number(hvac_savings_kwh, decimals=1)
 
     co2_coeff_text = _format_number(co2_coefficient, decimals=1) if co2_coefficient is not None else None
     temp_coeff_text = _format_number(temp_coefficient, decimals=1) if temp_coefficient is not None else None
@@ -94,7 +98,7 @@ def render_result_ui(
 .card-title { font-size: 15px; font-weight: 900; margin-bottom: 8px; }
 .card-desc { font-size: 12px; color: #718096; margin-bottom: 14px; }
 
-.viz-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .viz-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .viz-item { padding: 16px 12px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 14px; text-align: center; }
 .viz-icon { font-size: 28px; margin-bottom: 8px; }
 .viz-label { font-size: 11px; color: #718096; font-weight: 700; margin-bottom: 4px; }
@@ -241,11 +245,16 @@ def render_result_ui(
     <span class="summary-label">{coverage_percent}</span>
     <span class="summary-sub">녹화 비율</span>
   </div>
-  <div class="summary-divider"></div>
-  <div class="summary-item">
-    <span class="summary-label">{green_area_display}㎡</span>
-    <span class="summary-sub">녹지 면적</span>
-  </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">{green_area_display}㎡</span>
+      <span class="summary-sub">녹지 면적</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">{hvac_savings_display}kWh/년</span>
+      <span class="summary-sub">냉난방 절감</span>
+    </div>
 </section>
 """
     )
@@ -282,6 +291,11 @@ def render_result_ui(
       <div class="viz-label">소나무 환산</div>
       <div class="viz-value highlight-green">{_format_number(tree_equivalent_count, decimals=0)} <span class="viz-unit">그루</span></div>
       <div class="viz-sub">30년생 소나무 기준</div>
+    </div>
+    <div class="viz-item">
+      <div class="viz-icon">❄️</div>
+      <div class="viz-label">냉난방 절감</div>
+      <div class="viz-value">{hvac_savings_display} <span class="viz-unit">kWh/년</span></div>
     </div>
   </div>
 </div>
@@ -341,6 +355,10 @@ def render_result_ui(
           <span class="stat-label">표면 온도</span>
           <span class="stat-value cool">{_format_number(after_surface_temp_c, decimals=1)}℃ ({temp_reduction_display}℃) ▼</span>
         </div>
+        <div class="stat-row">
+          <span class="stat-label">냉난방 절감</span>
+          <span class="stat-value green">{hvac_savings_display} kWh/년 ▼</span>
+        </div>
       </div>
     </div>
   </div>
@@ -356,6 +374,9 @@ def render_result_ui(
         callout_items.append(f"<li><strong>활용:</strong> 소나무 환산은 30년생 기준 {pine_factor_text}kg/년입니다.</li>")
     else:
         callout_items.append("<li><strong>활용:</strong> 이 시뮬레이션 결과를 정책 제안 근거 자료로 사용하세요.</li>")
+    if recommended_combination:
+        badge = "목표 달성" if recommendation_feasible else "가장 근접"
+        callout_items.append(f"<li><strong>{_escape(badge)} 조합:</strong> {_escape(recommended_combination)}</li>")
     callout_html = "".join(callout_items)
 
     st.html(

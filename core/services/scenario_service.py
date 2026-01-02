@@ -3,6 +3,7 @@ from __future__ import annotations
 from core.constants import (
     DEFAULT_BASELINE_SURFACE_TEMP_C,
     DEFAULT_GREENING_COEFFS,
+    DEFAULT_HVAC_SAVINGS_KWH_PER_DEG_M2,
     DEFAULT_PINE_FACTOR_KG_PER_YEAR,
 )
 from core.models import ScenarioInput, SimulationResult
@@ -28,6 +29,7 @@ class ScenarioService:
         green_area = roof_area_m2 * scenario.coverage_ratio
         co2 = green_area * coeff.co2_kg_m2_y
         temp_reduction = coeff.temp_reduction_c_at_100 * scenario.coverage_ratio
+        hvac_savings = temp_reduction * roof_area_m2 * DEFAULT_HVAC_SAVINGS_KWH_PER_DEG_M2
         after_temp = baseline_surface_temp_c - temp_reduction
         tree_count = int(round(co2 / DEFAULT_PINE_FACTOR_KG_PER_YEAR)) if DEFAULT_PINE_FACTOR_KG_PER_YEAR > 0 else 0
 
@@ -38,6 +40,7 @@ class ScenarioService:
             green_area_m2=green_area,
             co2_absorption_kg_per_year=co2,
             temp_reduction_c=temp_reduction,
+            hvac_savings_kwh_per_year=hvac_savings,
             baseline_surface_temp_c=baseline_surface_temp_c,
             after_surface_temp_c=after_temp,
             tree_equivalent_count=tree_count,
@@ -47,6 +50,8 @@ class ScenarioService:
                 "coeff": {
                     "co2_kg_m2_y": coeff.co2_kg_m2_y,
                     "temp_reduction_c_at_100": coeff.temp_reduction_c_at_100,
+                    "cost_per_m2": coeff.cost_per_m2,
+                    "load_kg_per_m2": coeff.load_kg_per_m2,
                 }
             },
         )

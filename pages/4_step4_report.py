@@ -26,6 +26,8 @@ svc = AnalyzeService()
 result = SimulationResult(**result_dict)
 address_title = state.get("location", {}).get("input_address", "선택한 주소")
 address_caption = state.get("location", {}).get("normalized_address", address_title)
+recommendation_dict = state.get("recommendation") or result.meta.get("recommendation", {})
+recommended_combo = recommendation_dict.get("combination_label") if isinstance(recommendation_dict, dict) else None
 pdf_bytes, pdf_filename = svc.export_pdf()
 excel_bytes, excel_filename = svc.export_excel()
 
@@ -37,11 +39,13 @@ actions = render_report_ui(
     green_area_m2=result.green_area_m2,
     co2_absorption_kg=result.co2_absorption_kg_per_year,
     temp_reduction_c=result.temp_reduction_c,
+    hvac_savings_kwh=result.hvac_savings_kwh_per_year,
     tree_equivalent_count=result.tree_equivalent_count,
     pdf_bytes=pdf_bytes,
     pdf_filename=pdf_filename,
     excel_bytes=excel_bytes,
     excel_filename=excel_filename,
+    recommended_combination=recommended_combo,
 )
 
 if actions.get("prev_clicked"):

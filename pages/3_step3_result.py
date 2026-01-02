@@ -32,6 +32,9 @@ result = svc.compute()
 set_state("result", result.model_dump())
 address_title = state.get("location", {}).get("input_address", "선택한 주소")
 address_caption = state.get("location", {}).get("normalized_address", address_title)
+recommendation_dict = state.get("recommendation") or result.meta.get("recommendation", {})
+recommended_combo = recommendation_dict.get("combination_label") if isinstance(recommendation_dict, dict) else None
+recommendation_feasible = recommendation_dict.get("feasible") if isinstance(recommendation_dict, dict) else None
 
 ui_state = render_result_ui(
     address_title=address_title,
@@ -42,12 +45,15 @@ ui_state = render_result_ui(
     green_area_m2=result.green_area_m2,
     co2_absorption_kg=result.co2_absorption_kg_per_year,
     temp_reduction_c=result.temp_reduction_c,
+    hvac_savings_kwh=result.hvac_savings_kwh_per_year,
     baseline_surface_temp_c=result.baseline_surface_temp_c or DEFAULT_BASELINE_SURFACE_TEMP_C,
     after_surface_temp_c=result.after_surface_temp_c,
     tree_equivalent_count=result.tree_equivalent_count,
     co2_coefficient=DEFAULT_GREENING_COEFFS.get(result.greening_type, DEFAULT_GREENING_COEFFS.get("sedum")).co2_kg_m2_y,
     temp_coefficient=DEFAULT_GREENING_COEFFS.get(result.greening_type, DEFAULT_GREENING_COEFFS.get("sedum")).temp_reduction_c_at_100,
     pine_factor_kg_per_year=DEFAULT_PINE_FACTOR_KG_PER_YEAR,
+    recommended_combination=recommended_combo,
+    recommendation_feasible=recommendation_feasible,
 )
 
 if ui_state.get("prev_clicked"):

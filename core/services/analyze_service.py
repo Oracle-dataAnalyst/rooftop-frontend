@@ -49,6 +49,9 @@ class AnalyzeService:
         scenario_dict = st.session_state.get("scenario") or {}
         scenario = ScenarioInput(**scenario_dict)
         result = self.scenario.compute(roof_area_m2=roof_area, scenario=scenario)
+        recommendation = st.session_state.get("recommendation")
+        if recommendation:
+            result.meta["recommendation"] = recommendation
         st.session_state["result"] = result.model_dump()
         return result
 

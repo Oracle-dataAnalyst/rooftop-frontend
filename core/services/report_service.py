@@ -267,12 +267,19 @@ class ReportService:
         line(
             f"- 표면온도(전/후): {result.baseline_surface_temp_c:.1f}℃ → {result.after_surface_temp_c:.1f}℃"
         )
+        line(f"- 냉난방 절감(kWh/년): {result.hvac_savings_kwh_per_year:,.1f}")
         # int일 가능성이 높아서 천단위 콤마
         try:
             trees = f"{int(result.tree_equivalent_count):,}"
         except Exception:
             trees = str(result.tree_equivalent_count)
         line(f"- 소나무 환산(그루): {trees}", dy=30)
+        recommendation = (result.meta or {}).get("recommendation", {})
+        rec_label = recommendation.get("combination_label") if isinstance(recommendation, dict) else None
+        if rec_label:
+            badge = "목표 달성" if recommendation.get("feasible") else "근접 제안"
+            line("제안 조합", size=12, dy=18)
+            line(f"- {badge}: {rec_label}", dy=30)
 
         # Footer note
         line("※ 본 리포트는 MVP 산출물이며, 실제 정책/심사 제출 전 계수·근거 검증이 필요합니다.", size=9, dy=14)
@@ -287,6 +294,8 @@ class ReportService:
     def build_excel(self, result: SimulationResult) -> tuple[bytes, str]:
         buf = io.BytesIO()
         generated_at = _utc_now_iso()
+        recommendation = (result.meta or {}).get("recommendation", {})
+        rec_label = recommendation.get("combination_label") if isinstance(recommendation, dict) else None
 
         inputs = pd.DataFrame(
             [
@@ -294,6 +303,7 @@ class ReportService:
                 {"항목": "녹화 유형", "값": _greening_label(result.greening_type)},
                 {"항목": "녹화 비율", "값": _as_number(result.coverage_ratio)},  # 숫자로 유지(퍼센트 서식은 아래에서 적용)
                 {"항목": "기준 표면 온도(℃)", "값": _as_number(result.baseline_surface_temp_c)},
+                {"항목": "냉난방 절감(kWh/년)", "값": _as_number(result.hvac_savings_kwh_per_year)},
             ]
         )
 
@@ -312,6 +322,7 @@ class ReportService:
                 {"항목": "엔진 버전", "값": result.engine_version},
                 {"항목": "계수 세트 버전", "값": result.coefficient_set_version},
                 {"항목": "생성 시각 (UTC)", "값": generated_at},
+                {"항목": "제안 조합", "값": rec_label if rec_label else "제안 없음"},
             ]
         )
 

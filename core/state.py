@@ -11,6 +11,7 @@ DEFAULTS = {
     "roof_area_m2_confirmed": None,
     "scenario": None,
     "result": None,
+    "recommendation": None,
 }
 
 def ensure_session() -> None:

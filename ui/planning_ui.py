@@ -89,6 +89,9 @@ def render_planning_ui(
     green_area_m2: float,
     co2_absorption_kg: float,
     temp_reduction_c: float,
+    hvac_savings_kwh: float,
+    recommended_combination: str | None = None,
+    recommendation_status: str | None = None,
 ) -> dict:
     st.markdown(
         """
@@ -162,7 +165,7 @@ def render_planning_ui(
         .slider-pill { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: #edf2f7; color: #1a202c; font-size: 12px; font-weight: 900; padding: 6px 10px; }
 
         /* 프리뷰 */
-        .preview { margin-top: 14px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #fff; }
+        .preview { margin-top: 14px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #fff; }
         .preview-item { border: 1px solid #edf2f7; border-radius: 14px; padding: 10px 10px; background: #f7fafc; }
         .preview-item .k { font-size: 11px; color: #718096; font-weight: 900; margin-bottom: 4px; }
         .preview-item .v { font-size: 14px; color: #1a202c; font-weight: 900; }
@@ -403,6 +406,10 @@ def render_planning_ui(
                 <div class="k">예상 온도 저감</div>
                 <div class="v">{_format_decimal(temp_reduction_c)}℃</div>
               </div>
+              <div class="preview-item">
+                <div class="k">예상 냉난방 절감</div>
+                <div class="v">{_format_decimal(hvac_savings_kwh)}kWh/년</div>
+              </div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -419,6 +426,18 @@ def render_planning_ui(
         st.markdown("</div></section>", unsafe_allow_html=True)
 
     with right_col:
+        if recommended_combination:
+            st.markdown(
+                f"""
+                <section class="card">
+                  <div class="card-title">제안 조합</div>
+                  <p class="subtitle" style="margin-top:4px;">{recommendation_status or "목표에 맞춰 산출된 최적 조합입니다."}</p>
+                  <div style="font-size:18px;font-weight:900;margin-top:10px;">{recommended_combination}</div>
+                </section>
+                """,
+                unsafe_allow_html=True,
+            )
+
         st.markdown(
             """
             <section class="card">
