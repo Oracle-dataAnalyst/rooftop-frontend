@@ -1,0 +1,359 @@
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",system-ui,sans-serif;
+  background:#f4f6f9;
+  color:#1a202c;
+  line-height:1.6;
+}
+a{text-decoration:none;color:inherit}
+
+.container{
+  max-width:1120px;
+  margin:0 auto;
+  padding:0 20px;
+}
+.container-1320{
+  max-width:1120px;
+  margin:0 auto;
+  padding:0 20px;
+}
+
+/* 헤더 */
+.app-header{
+  background:#0b3b5b;
+  color:#fff;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.header-inner{
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800}
+.logo-mark{
+  width:24px;height:24px;border-radius:999px;
+  background:linear-gradient(135deg,#48bb78,#2f855a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+}
+.logo-text{font-size:18px}
+.nav{display:flex;align-items:center;gap:22px;font-size:13px}
+.nav-link{opacity:.9}
+.nav-link:hover{opacity:1}
+.nav-link.active{font-weight:700;opacity:1}
+.btn-outline{
+  border:1px solid rgba(255,255,255,.6);
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:13px;
+  font-weight:700;
+  color:#fff;
+  background:transparent;
+}
+
+/* 히어로 */
+.gseed-hero{
+  background:linear-gradient(135deg,#0b3b5b 0%,#1a5a7a 100%);
+  color:#fff;
+  padding:80px 0;
+  text-align:center;
+}
+.hero-badge{
+  display:inline-block;
+  padding:6px 14px;
+  border-radius:999px;
+  background:rgba(72,187,120,.2);
+  border:1px solid rgba(72,187,120,.4);
+  font-size:12px;
+  font-weight:700;
+  color:#68d391;
+  margin-bottom:18px;
+}
+.hero-title{
+  font-size:40px;
+  font-weight:900;
+  margin-bottom:16px;
+  line-height:1.3;
+}
+.hero-title .highlight{color:#48bb78}
+.hero-desc{
+  font-size:16px;
+  opacity:.9;
+  margin-bottom:12px;
+  line-height:1.7;
+}
+.hero-sub{
+  font-size:14px;
+  opacity:.75;
+}
+
+/* 섹션 공통 */
+.section{padding:60px 0}
+.section-gray{background:#f9fafb}
+
+.section-title{
+  text-align:center;
+  font-size:26px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+.section-desc{
+  text-align:center;
+  font-size:14px;
+  color:#718096;
+  margin-bottom:36px;
+  line-height:1.7;
+}
+
+/* 핵심 효과 그리드 */
+.effect-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+}
+.effect-card{
+  background:#fff;
+  border-radius:16px;
+  padding:24px 20px;
+  text-align:center;
+  box-shadow:0 10px 40px rgba(15,23,42,.08);
+}
+.effect-icon{
+  width:52px;height:52px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#f0fff4,#e6fffa);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  margin:0 auto 14px;
+}
+.effect-title{
+  font-size:14px;
+  font-weight:900;
+  margin-bottom:6px;
+  color:#0b3b5b;
+}
+.effect-desc{
+  font-size:12px;
+  color:#718096;
+  line-height:1.5;
+}
+
+/* 인증 등급 & 세제 혜택 */
+.benefit-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:24px;
+}
+.benefit-card{
+  background:#fff;
+  border-radius:16px;
+  padding:28px;
+  box-shadow:0 10px 40px rgba(15,23,42,.08);
+}
+.benefit-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+}
+.benefit-icon{font-size:24px}
+.benefit-label{
+  font-size:11px;
+  color:#718096;
+  font-weight:700;
+  background:#f7fafc;
+  padding:4px 10px;
+  border-radius:999px;
+}
+.benefit-title{
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:6px;
+  color:#0b3b5b;
+}
+.benefit-sub{
+  font-size:12px;
+  color:#a0aec0;
+  margin-bottom:18px;
+}
+
+/* 테이블 */
+.benefit-table{
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:14px;
+}
+.table-row{
+  display:grid;
+  grid-template-columns:1.3fr 1fr .7fr;
+  padding:12px 14px;
+  font-size:12px;
+  border-bottom:1px solid #e2e8f0;
+}
+.table-row:last-child{border-bottom:none}
+.table-row.header{
+  background:#f7fafc;
+  font-weight:900;
+  color:#4a5568;
+}
+.table-row.highlight{background:#f0fff4}
+.green{color:#2f855a;font-weight:900}
+
+.benefit-note{
+  font-size:11px;
+  color:#a0aec0;
+  display:flex;
+  align-items:flex-start;
+  gap:6px;
+}
+.benefit-note .icon{color:#ed8936}
+
+/* 하이라이트 박스 */
+.benefit-highlight{
+  background:linear-gradient(135deg,#f0fff4,#e6fffa);
+  border-radius:14px;
+  padding:24px;
+  text-align:center;
+  margin-bottom:18px;
+}
+.highlight-value{
+  font-size:32px;
+  font-weight:900;
+  color:#2f855a;
+}
+.highlight-label{
+  font-size:12px;
+  color:#718096;
+  margin-top:4px;
+}
+.benefit-list{
+  padding-left:18px;
+  font-size:12px;
+  color:#4a5568;
+  line-height:1.8;
+}
+.benefit-list li{margin-bottom:6px}
+
+/* 평가 분야 */
+.eval-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:18px;
+}
+.eval-card{
+  background:#fff;
+  border-radius:14px;
+  padding:20px;
+  box-shadow:0 10px 40px rgba(15,23,42,.08);
+}
+.eval-number{
+  width:32px;height:32px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#48bb78,#2f855a);
+  color:#fff;
+  font-size:14px;
+  font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:12px;
+}
+.eval-title{
+  font-size:13px;
+  font-weight:900;
+  margin-bottom:6px;
+  color:#0b3b5b;
+}
+.eval-desc{
+  font-size:11px;
+  color:#718096;
+  line-height:1.5;
+}
+
+/* 인증 등급 테이블 */
+.grade-table{
+  background:#fff;
+  border-radius:16px;
+  padding:28px;
+  box-shadow:0 10px 40px rgba(15,23,42,.08);
+  max-width:700px;
+  margin:0 auto;
+}
+.grade-table-title{
+  font-size:16px;
+  font-weight:900;
+  margin-bottom:18px;
+  text-align:center;
+  color:#0b3b5b;
+}
+.grade-row{
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1fr;
+  padding:14px 16px;
+  font-size:13px;
+  border-bottom:1px solid #e2e8f0;
+}
+.grade-row:last-child{border-bottom:none}
+.grade-row.header{
+  background:#0b3b5b;
+  color:#fff;
+  font-weight:700;
+  border-radius:10px 10px 0 0;
+}
+.grade-row.green1{background:#f0fff4}
+.grade-badge{
+  display:inline-block;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+}
+.badge-green1{background:#c6f6d5;color:#22543d}
+.badge-green2{background:#bee3f8;color:#2a4365}
+.badge-green3{background:#feebc8;color:#744210}
+.badge-green4{background:#e2e8f0;color:#4a5568}
+
+/* 법적 근거 */
+.legal-ref{
+  background:#f7fafc;
+  border-radius:12px;
+  padding:16px 20px;
+  margin-top:24px;
+  font-size:11px;
+  color:#718096;
+  line-height:1.6;
+}
+.legal-ref strong{color:#4a5568}
+
+/* 푸터 */
+.footer{
+  border-top:1px solid #e2e8f0;
+  padding:22px 0 30px;
+  font-size:12px;
+  color:#a0aec0;
+  background:#fff;
+}
+.footer-inner{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.footer-links{display:flex;gap:16px}
+
+/* 반응형 */
+@media (max-width: 900px){
+  .effect-grid{grid-template-columns:repeat(2,1fr)}
+  .benefit-grid{grid-template-columns:1fr}
+  .eval-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width: 640px){
+  .effect-grid{grid-template-columns:1fr}
+  .eval-grid{grid-template-columns:1fr}
+  .hero-title{font-size:28px}
+}

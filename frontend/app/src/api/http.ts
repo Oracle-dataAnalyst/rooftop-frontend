@@ -1,4 +1,4 @@
-export const apiBaseUrl = "/api/v1";
+export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
 export const request = async (path: string, options?: RequestInit) => {
   const response = await fetch(`${apiBaseUrl}${path}`, {
