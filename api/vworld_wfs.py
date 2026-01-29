@@ -3,11 +3,32 @@ from __future__ import annotations
 import math
 import os
 import time
+
+from urllib.parse import urlparse
 from typing import Iterable, Optional
 
 import requests
 
 VWORLD_WFS_URL = "https://api.vworld.kr/req/wfs"
+
+def _normalize_domain(domain: str) -> str:
+    cleaned = (domain or "").strip()
+    if not cleaned:
+        return ""
+    if cleaned.startswith("http://http://"):
+        cleaned = cleaned.replace("http://http://", "http://", 1)
+    elif cleaned.startswith("https://http://"):
+        cleaned = cleaned.replace("https://http://", "http://", 1)
+    elif cleaned.startswith("http://https://"):
+        cleaned = cleaned.replace("http://https://", "https://", 1)
+    elif cleaned.startswith("https://https://"):
+        cleaned = cleaned.replace("https://https://", "https://", 1)
+    parsed = urlparse(cleaned)
+    if parsed.scheme and parsed.netloc:
+        cleaned = f"{parsed.scheme}://{parsed.netloc}"
+    return cleaned.rstrip("/")
+
+
 
 
 def _bbox_from_point(lat: float, lon: float, radius_m: float) -> tuple[float, float, float, float]:
@@ -78,7 +99,9 @@ def _fetch_polygon_once(
         "key": api_key,
     }
     if domain:
-        params["domain"] = domain
+        normalized = _normalize_domain(domain)
+        if normalized:
+            params["domain"] = normalized
 
     resp = requests.get(VWORLD_WFS_URL, params=params, timeout=timeout_s)
     ctype = resp.headers.get("Content-Type", "")
